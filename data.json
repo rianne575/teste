@@ -3,10 +3,10 @@
     {
       "id": "occ-example-001",
       "tipo": "Falta de EPI",
-      "descricao": "Trabalhador observado sem capacete de segurança no canteiro de obras.",
+      "descricao": "Trabalhador sem capacete de segurança no canteiro de obras.",
       "gravidade": "alta",
       "local": "Setor A - Fundação",
-      "recomendacao": "Interromper imediatamente a atividade e providenciar equipamento de proteção adequado. Reforçar treinamento sobre uso obrigatório de EPI.",
+      "recomendacao": "Interromper imediatamente e providenciar equipamento de proteção adequado.",
       "status": "aberta",
       "createdAt": "2024-01-15T10:30:00Z"
     }
