@@ -10,6 +10,7 @@ yarn.lock
 .env
 .env.local
 .env.*.local
+!.env.example
 
 # IDE
 .vscode/
@@ -17,10 +18,11 @@ yarn.lock
 *.swp
 *.swo
 *~
+.DS_Store
 
 # OS
-.DS_Store
 Thumbs.db
+.DS_Store
 
 # Build
 dist/
@@ -29,3 +31,6 @@ build/
 # Logs
 logs/
 *.log
+
+# Data local
+data.local.json

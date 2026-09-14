@@ -6,8 +6,10 @@ services:
     buildCommand: npm install
     startCommand: npm start
     envVars:
+      - key: NODE_ENV
+        value: production
       - key: PORT
-        sync: false
+        value: 8080
       - key: OPENAI_API_KEY
         sync: false
       - key: OPENAI_MODEL
@@ -16,5 +18,3 @@ services:
         value: gpt-4o
       - key: CORS_ORIGIN
         value: '*'
-      - key: NODE_ENV
-        value: production

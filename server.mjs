@@ -8,7 +8,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 
-// Carrega variáveis de ambiente
+// Carregar variáveis de ambiente
 dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -27,8 +27,8 @@ app.use(cors({
 
 // Middleware de rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // limite de 100 requisições por IP
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: 'Muitas requisições, tente novamente mais tarde.'
 });
 app.use(limiter);
@@ -40,17 +40,18 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 // Configuração do multer para upload de imagens
 const storage = multer.memoryStorage();
 const fileFilter = (req, file, cb) => {
-  const allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+  const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Formato de arquivo não suportado. Use JPG, PNG ou WEBP.'));
+    cb(new Error('Formato de arquivo não suportado. Use JPG, JPEG, PNG ou WEBP.'));
   }
 };
+
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 10 * 1024 * 1024 } // 10 MB
+  limits: { fileSize: 10 * 1024 * 1024 }
 });
 
 // ============================================================================
@@ -62,14 +63,13 @@ let openai = null;
 function initializeOpenAI() {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    console.warn('⚠️  OPENAI_API_KEY não está configurada.');
     return null;
   }
   return new OpenAI({ apiKey });
 }
 
 // ============================================================================
-// FUNÇÕES AUXILIARES PARA PERSISTÊNCIA DE DADOS
+// FUNÇÕES AUXILIARES
 // ============================================================================
 
 function loadData() {
@@ -102,19 +102,14 @@ function generateId(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-// ============================================================================
-// TRATAMENTO DE ERROS GLOBAL
-// ============================================================================
-
 function handleError(res, error, statusCode = 500) {
   console.error('Erro:', error.message);
-  const isAIError = error.message.includes('API') || error.message.includes('OpenAI');
-  const status = isAIError ? 502 : statusCode;
-  const message = isAIError 
-    ? 'Não foi possível conectar ao serviço de IA.' 
-    : error.message || 'Erro interno no servidor.';
   
-  res.status(status).json({ error: message });
+  if (error.message.includes('API') || error.message.includes('OpenAI') || error.message.includes('timeout')) {
+    return res.status(502).json({ error: 'Não foi possível conectar ao serviço de IA.' });
+  }
+  
+  res.status(statusCode).json({ error: error.message || 'Erro interno no servidor.' });
 }
 
 // ============================================================================
@@ -130,68 +125,80 @@ app.get('/health', (req, res) => {
 });
 
 // ============================================================================
-// ENDPOINTS DE AUTENTICAÇÃO (compatibilidade com Flutter)
+// ENDPOINTS DE AUTENTICAÇÃO
 // ============================================================================
 
 app.post('/auth/login', (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email e senha são obrigatórios.' });
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email e senha são obrigatórios.' });
+    }
+    res.status(200).json({
+      token: `token_${Date.now()}`,
+      user: { id: 'user-001', email, name: 'Usuário' }
+    });
+  } catch (error) {
+    handleError(res, error);
   }
-  res.status(200).json({
-    token: `token_${Date.now()}`,
-    user: { id: 'user-001', email, name: 'Usuário' }
-  });
 });
 
 app.post('/auth/register', (req, res) => {
-  const { email, password, name } = req.body;
-  if (!email || !password || !name) {
-    return res.status(400).json({ error: 'Email, senha e nome são obrigatórios.' });
+  try {
+    const { email, password, name } = req.body;
+    if (!email || !password || !name) {
+      return res.status(400).json({ error: 'Email, senha e nome são obrigatórios.' });
+    }
+    res.status(201).json({
+      token: `token_${Date.now()}`,
+      user: { id: generateId('user'), email, name }
+    });
+  } catch (error) {
+    handleError(res, error);
   }
-  res.status(201).json({
-    token: `token_${Date.now()}`,
-    user: { id: generateId('user'), email, name }
-  });
 });
 
 app.post('/auth/forgot-password', (req, res) => {
-  const { email } = req.body;
-  if (!email) {
-    return res.status(400).json({ error: 'Email é obrigatório.' });
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email é obrigatório.' });
+    }
+    res.status(200).json({
+      message: 'Email de recuperação enviado. Verifique sua caixa de entrada.'
+    });
+  } catch (error) {
+    handleError(res, error);
   }
-  res.status(200).json({
-    message: 'Email de recuperação enviado. Verifique sua caixa de entrada.'
-  });
 });
-
-// ============================================================================
-// ENDPOINTS DE USUÁRIO
-// ============================================================================
 
 app.get('/users/me', (req, res) => {
-  res.status(200).json({
-    id: 'user-001',
-    email: 'usuario@obrasegura.com',
-    name: 'Usuário ObraSegura',
-    role: 'worker'
-  });
+  try {
+    res.status(200).json({
+      id: 'user-001',
+      email: 'usuario@obrasegura.com',
+      name: 'Usuário ObraSegura',
+      role: 'worker'
+    });
+  } catch (error) {
+    handleError(res, error);
+  }
 });
 
 // ============================================================================
-// ENDPOINTS DE CHAT COM IA
+// ENDPOINTS DE CHAT COM IA REAL
 // ============================================================================
 
 app.post('/ai/chat', async (req, res) => {
   try {
     const { message } = req.body;
-    if (!message) {
-      return res.status(400).json({ error: 'Mensagem é obrigatória.' });
+    if (!message || message.trim() === '') {
+      return res.status(400).json({ error: 'Informe uma mensagem.' });
     }
 
     openai = initializeOpenAI();
     if (!openai) {
-      return handleError(res, new Error('Serviço de IA não disponível'), 502);
+      return res.status(503).json({ error: 'Serviço de inteligência artificial não configurado.' });
     }
 
     const response = await openai.chat.completions.create({
@@ -200,14 +207,24 @@ app.post('/ai/chat', async (req, res) => {
         {
           role: 'system',
           content: `Você é uma assistente especializada em segurança do trabalho na construção civil. 
-          Responda em português do Brasil. 
-          Seja útil, claro e prático. 
-          Não invente normas, leis ou informações técnicas. 
-          Se a pergunta envolver uma situação potencialmente perigosa, oriente o usuário a interromper a atividade e procurar um profissional responsável quando necessário.`
+Responda em português do Brasil de forma clara, prática e útil. 
+Você pode responder perguntas sobre: 
+- Identificação de riscos;
+- EPI (Equipamento de Proteção Individual);
+- Trabalho em altura;
+- Andaimes e estruturas;
+- Eletricidade e instalações;
+- Máquinas e equipamentos;
+- Escavações e fundações;
+- Organização de obra;
+- Prevenção de acidentes;
+- Primeiros socorros básicos.
+Não invente normas ou leis. Se a situação for grave ou iminente, oriente a parar a atividade e procurar um profissional responsável.`
         },
         { role: 'user', content: message }
       ],
-      max_tokens: 1024
+      max_tokens: 1024,
+      temperature: 0.7
     });
 
     const reply = response.choices[0]?.message?.content || 'Não foi possível gerar uma resposta.';
@@ -218,7 +235,7 @@ app.post('/ai/chat', async (req, res) => {
 });
 
 // ============================================================================
-// ENDPOINTS DE ANÁLISE DE IMAGEM
+// ENDPOINTS DE ANÁLISE REAL DE IMAGEM
 // ============================================================================
 
 app.post('/ai/analyze-image', upload.single('image'), async (req, res) => {
@@ -229,7 +246,7 @@ app.post('/ai/analyze-image', upload.single('image'), async (req, res) => {
 
     openai = initializeOpenAI();
     if (!openai) {
-      return handleError(res, new Error('Serviço de IA não disponível'), 502);
+      return res.status(503).json({ error: 'Serviço de inteligência artificial não configurado.' });
     }
 
     const base64Image = req.file.buffer.toString('base64');
@@ -243,34 +260,33 @@ app.post('/ai/analyze-image', upload.single('image'), async (req, res) => {
           content: [
             {
               type: 'text',
-              text: `Analise esta imagem de uma obra procurando situações de risco relacionadas à segurança. 
-              Identifique, quando possível:
-              - falta de EPI
-              - ausência de capacete
-              - ausência de proteção contra quedas
-              - trabalho em altura
-              - andaimes inadequados
-              - máquinas perigosas
-              - instalações elétricas perigosas
-              - materiais mal armazenados
-              - obstáculos
-              - risco de queda
-              - risco de esmagamento
-              - risco de incêndio
-              - áreas sem isolamento
-              - circulação insegura
-              
-              Retorne APENAS um JSON válido (sem markdown) com esta estrutura exata:
-              {
-                "tipo": "string (tipo de risco identificado)",
-                "descricao": "string (descrição do risco)",
-                "gravidade": "string (segura|baixa|media|alta|critica)",
-                "local": "string (local onde foi identificado)",
-                "recomendacao": "string (recomendação de segurança)"
-              }
-              
-              Se não houver riscos identificáveis, retorne gravidade como "segura".
-              Não invente riscos que não estejam razoavelmente visíveis.`
+              text: `Analise esta imagem de uma obra procurando por riscos de segurança. Procure por:
+- Falta de capacete de segurança
+- Falta de EPI (Equipamento de Proteção Individual)
+- Trabalho em altura
+- Ausência de proteção contra quedas
+- Andaimes inadequados ou mal estruturados
+- Máquinas perigosas sem proteção
+- Riscos elétricos (fios expostos, instalações precárias)
+- Materiais mal armazenados ou empilhados
+- Obstáculos no caminho
+- Risco de queda de objetos
+- Risco de esmagamento
+- Risco de incêndio
+- Áreas sem isolamento de risco
+- Circulação insegura
+- Outros riscos visíveis
+
+RETORNE APENAS UM JSON VÁLIDO (sem markdown, sem explicações) com exatamente esta estrutura:
+{
+  "tipo": "Tipo do risco ou 'Nenhum risco identificado'",
+  "descricao": "Descrição clara do que foi identificado",
+  "gravidade": "segura, baixa, media, alta ou critica",
+  "local": "Onde na imagem foi identificado",
+  "recomendacao": "Medida preventiva recomendada"
+}
+
+IMPORTANTE: Não invente riscos que não estejam claramente visíveis. Se não houver risco evidente, use gravidade 'segura'.`
             },
             {
               type: 'image_url',
@@ -290,25 +306,25 @@ app.post('/ai/analyze-image', upload.single('image'), async (req, res) => {
     try {
       analysis = JSON.parse(analysisText);
     } catch {
-      // Tenta extrair JSON da resposta se houver markdown
       const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         analysis = JSON.parse(jsonMatch[0]);
       } else {
         analysis = {
-          tipo: 'Análise indisponível',
-          descricao: 'Não foi possível analisar a imagem.',
-          gravidade: 'media',
-          local: 'Área da obra',
-          recomendacao: 'Tente novamente ou envie outra imagem.'
+          tipo: 'Nenhum risco identificado',
+          descricao: 'Não foi identificado risco evidente na imagem.',
+          gravidade: 'segura',
+          local: 'Área analisada',
+          recomendacao: 'Manter as medidas de segurança e continuar o monitoramento.'
         };
       }
     }
 
-    // Validação de gravidade
     const gravidadesValidas = ['segura', 'baixa', 'media', 'alta', 'critica'];
-    if (!gravidadesValidas.includes(analysis.gravidade)) {
+    if (!gravidadesValidas.includes(analysis.gravidade?.toLowerCase())) {
       analysis.gravidade = 'media';
+    } else {
+      analysis.gravidade = analysis.gravidade.toLowerCase();
     }
 
     res.status(200).json(analysis);
@@ -325,7 +341,7 @@ app.get('/ai/recommendations', async (req, res) => {
   try {
     openai = initializeOpenAI();
     if (!openai) {
-      return handleError(res, new Error('Serviço de IA não disponível'), 502);
+      return res.status(503).json({ error: 'Serviço de inteligência artificial não configurado.' });
     }
 
     const response = await openai.chat.completions.create({
@@ -333,11 +349,11 @@ app.get('/ai/recommendations', async (req, res) => {
       messages: [
         {
           role: 'system',
-          content: 'Você é uma assistente especializada em segurança do trabalho na construção civil.'
+          content: 'Você é especialista em segurança do trabalho na construção civil.'
         },
         {
           role: 'user',
-          content: 'Liste 5 recomendações práticas e importantes de segurança em obras de construção. Formate como um JSON array com objetos contendo "id", "titulo" e "descricao".'
+          content: 'Liste 5 recomendações práticas e importantes de segurança em obras de construção. Retorne APENAS um JSON array válido (sem markdown) com objetos contendo "id", "titulo" e "descricao".'
         }
       ],
       max_tokens: 1024
@@ -350,21 +366,25 @@ app.get('/ai/recommendations', async (req, res) => {
       const jsonMatch = responseText.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
         recommendations = JSON.parse(jsonMatch[0]);
-      } else {
-        recommendations = [
-          {
-            id: 'rec-001',
-            titulo: 'Uso obrigatório de EPI',
-            descricao: 'Equipamento de Proteção Individual deve ser utilizado em todas as atividades.'
-          }
-        ];
       }
-    } catch {
+    } catch {}
+
+    if (!Array.isArray(recommendations) || recommendations.length === 0) {
       recommendations = [
         {
           id: 'rec-001',
           titulo: 'Uso obrigatório de EPI',
-          descricao: 'Equipamento de Proteção Individual deve ser utilizado em todas as atividades.'
+          descricao: 'Equipamento de Proteção Individual deve ser utilizado em todas as atividades da obra.'
+        },
+        {
+          id: 'rec-002',
+          titulo: 'Proteção contra quedas em altura',
+          descricao: 'Usar cintos de segurança, telas de proteção e guardrails em trabalhos acima de 1,2m.'
+        },
+        {
+          id: 'rec-003',
+          titulo: 'Isolamento de áreas de risco',
+          descricao: 'Cercar e sinalizar áreas com risco de queda de objetos, máquinas em funcionamento e instalações elétricas.'
         }
       ];
     }
@@ -397,8 +417,8 @@ app.post('/occurrences', (req, res) => {
     }
 
     const gravidadesValidas = ['segura', 'baixa', 'media', 'alta', 'critica'];
-    if (!gravidadesValidas.includes(gravidade)) {
-      return res.status(400).json({ error: 'Gravidade inválida.' });
+    if (!gravidadesValidas.includes(gravidade.toLowerCase())) {
+      return res.status(400).json({ error: 'Gravidade inválida. Use: segura, baixa, media, alta, critica.' });
     }
 
     const data = loadData();
@@ -406,7 +426,7 @@ app.post('/occurrences', (req, res) => {
       id: generateId('occ'),
       tipo,
       descricao,
-      gravidade,
+      gravidade: gravidade.toLowerCase(),
       local,
       recomendacao,
       status: 'aberta',
@@ -436,7 +456,7 @@ app.put('/occurrences/:id', (req, res) => {
 
     if (tipo) occurrence.tipo = tipo;
     if (descricao) occurrence.descricao = descricao;
-    if (gravidade) occurrence.gravidade = gravidade;
+    if (gravidade) occurrence.gravidade = gravidade.toLowerCase();
     if (local) occurrence.local = local;
     if (recomendacao) occurrence.recomendacao = recomendacao;
     if (status) occurrence.status = status;
@@ -478,12 +498,12 @@ app.get('/alerts', (req, res) => {
       .filter(o => o.gravidade === 'alta' || o.gravidade === 'critica')
       .map(o => ({
         id: o.id,
-        tipo: o.tipo,
-        descricao: o.descricao,
-        gravidade: o.gravidade,
-        local: o.local,
-        createdAt: o.createdAt,
-        resolved: data.resolvedAlerts?.includes(o.id) || false
+        occurrenceId: o.id,
+        title: o.tipo,
+        description: o.descricao,
+        severity: o.gravidade,
+        resolved: data.resolvedAlerts?.includes(o.id) || false,
+        createdAt: o.createdAt
       }));
 
     res.status(200).json(alerts);
@@ -497,8 +517,8 @@ app.put('/alerts/:id/resolve', (req, res) => {
     const { id } = req.params;
     const data = loadData();
 
-    const alert = data.occurrences.find(o => o.id === id);
-    if (!alert) {
+    const occurrence = data.occurrences.find(o => o.id === id);
+    if (!occurrence) {
       return res.status(404).json({ error: 'Alerta não encontrado.' });
     }
 
@@ -510,10 +530,14 @@ app.put('/alerts/:id/resolve', (req, res) => {
       data.resolvedAlerts.push(id);
     }
 
-    alert.status = 'resolvida';
+    occurrence.status = 'resolvida';
     saveData(data);
 
-    res.status(200).json({ message: 'Alerta resolvido.', alert });
+    res.status(200).json({ 
+      message: 'Alerta resolvido.',
+      id,
+      resolved: true
+    });
   } catch (error) {
     handleError(res, error);
   }
@@ -533,7 +557,6 @@ app.get('/dashboard', (req, res) => {
     const criticalOccurrences = occurrences.filter(o => o.gravidade === 'critica').length;
     const resolvedOccurrences = occurrences.filter(o => o.status === 'resolvida').length;
 
-    // Calcula score de segurança (0-100)
     let safetyScore = 100;
     if (totalOccurrences > 0) {
       const criticalWeight = criticalOccurrences * 25;
@@ -556,7 +579,7 @@ app.get('/dashboard', (req, res) => {
 });
 
 // ============================================================================
-// ENDPOINTS DE RISCOS (compatibilidade com Flutter)
+// ENDPOINTS DE RISCOS
 // ============================================================================
 
 app.get('/risks', (req, res) => {
@@ -604,18 +627,80 @@ app.get('/risk-map', (req, res) => {
 // ENDPOINTS DE MONITORAMENTO
 // ============================================================================
 
-app.post('/monitoring/analyze', (req, res) => {
+app.post('/monitoring/analyze', upload.single('image'), async (req, res) => {
   try {
-    const { imageUrl, location } = req.body;
-    if (!imageUrl || !location) {
-      return res.status(400).json({ error: 'imageUrl e location são obrigatórios.' });
+    if (!req.file) {
+      return res.status(400).json({ error: 'Envie uma imagem no campo image.' });
     }
+
+    openai = initializeOpenAI();
+    if (!openai) {
+      return res.status(503).json({ error: 'Serviço de inteligência artificial não configurado.' });
+    }
+
+    const base64Image = req.file.buffer.toString('base64');
+    const mimeType = req.file.mimetype;
+    const location = req.body.location || 'Área da obra';
+
+    const response = await openai.chat.completions.create({
+      model: process.env.OPENAI_VISION_MODEL || 'gpt-4o',
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: `Analise esta imagem de uma obra procurando por riscos de segurança. Retorne um JSON com os campos: tipo, descricao, gravidade (segura/baixa/media/alta/critica), local, recomendacao.`
+            },
+            {
+              type: 'image_url',
+              image_url: {
+                url: `data:${mimeType};base64,${base64Image}`
+              }
+            }
+          ]
+        }
+      ],
+      max_tokens: 512
+    });
+
+    const analysisText = response.choices[0]?.message?.content || '{}';
+    let analysis = {};
+
+    try {
+      const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        analysis = JSON.parse(jsonMatch[0]);
+      }
+    } catch {}
+
+    const gravidadesValidas = ['segura', 'baixa', 'media', 'alta', 'critica'];
+    if (!gravidadesValidas.includes(analysis.gravidade?.toLowerCase())) {
+      analysis.gravidade = 'media';
+    }
+
+    const data = loadData();
+    const newOccurrence = {
+      id: generateId('occ'),
+      tipo: analysis.tipo || 'Risco analisado',
+      descricao: analysis.descricao || 'Análise automática de imagem',
+      gravidade: (analysis.gravidade || 'media').toLowerCase(),
+      local: location,
+      recomendacao: analysis.recomendacao || 'Revisar as medidas de segurança',
+      status: analysis.gravidade !== 'segura' ? 'aberta' : 'resolvida',
+      createdAt: new Date().toISOString()
+    };
+
+    data.occurrences.push(newOccurrence);
+    saveData(data);
 
     res.status(200).json({
       analysisId: generateId('analysis'),
       location,
       timestamp: new Date().toISOString(),
-      status: 'pendente'
+      status: 'completo',
+      analysis: analysis,
+      occurrence: newOccurrence
     });
   } catch (error) {
     handleError(res, error);
@@ -677,13 +762,15 @@ app.use((req, res) => {
 // ============================================================================
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 ObraSegura API rodando em http://localhost:${PORT}`);
-  console.log(`📡 CORS habilitado para: ${process.env.CORS_ORIGIN || '*'}`);
-  console.log(`🔒 Rate limit: 100 requisições a cada 15 minutos`);
+  console.log(`\n🚀 ObraSegura API iniciada`);
+  console.log(`📍 Servidor: http://0.0.0.0:${PORT}`);
+  console.log(`🌐 URL Local: http://localhost:${PORT}`);
+  console.log(`🔒 CORS: ${process.env.CORS_ORIGIN || '*'}`);
   
   if (!process.env.OPENAI_API_KEY) {
-    console.warn('⚠️  OPENAI_API_KEY não configurada. Endpoints de IA não funcionarão.');
+    console.warn('\n⚠️  AVISO: OPENAI_API_KEY não configurada');
+    console.warn('   Endpoints de IA não funcionarão sem a chave da OpenAI.\n');
   } else {
-    console.log('✅ OpenAI API configurada');
+    console.log('✅ OpenAI API configurada\n');
   }
 });

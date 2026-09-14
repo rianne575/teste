@@ -1,33 +1,31 @@
 ````markdown
 # ObraSegura API 🏗️🔒
 
-Backend API real e funcional para o aplicativo Flutter **ObraSegura** - uma solução inteligente de segurança para obras de construção.
+Backend API real e funcional para o aplicativo Flutter **ObraSegura** - Segurança Inteligente em Obras de Construção.
 
 ## 📋 Descrição
 
-ObraSegura API é uma API REST desenvolvida com **Node.js** e **Express** que fornece funcionalidades de:
+ObraSegura API é uma API REST desenvolvida com **Node.js** e **Express** que fornece:
 
-- 🤖 Chat com IA especializada em segurança do trabalho
-- 📸 Análise de imagens para identificação de riscos
-- 📝 Gerenciamento de ocorrências de segurança
-- 🚨 Sistema de alertas
-- 📊 Dashboard com métricas de segurança
-- 📄 Geração de relatórios
-- 💾 Persistência de dados
+- 🤖 **Chat com IA Real** - Assistente especializada em segurança do trabalho
+- 📸 **Análise Real de Imagens** - Detecção de riscos usando visão computacional da OpenAI
+- 📝 **Gerenciamento de Ocorrências** - CRUD completo de eventos de segurança
+- 🚨 **Sistema de Alertas** - Notificações automáticas de riscos críticos
+- 📊 **Dashboard** - Métricas e indicadores de segurança
+- 📄 **Relatórios** - Documentação de eventos e tendências
+- 💾 **Persistência** - Dados armazenados em JSON local
 
-A API integra-se com a **OpenAI** para fornecer respostas inteligentes e análises reais de imagens.
+## 🚀 Quick Start - Instalação Local
 
-## 🚀 Quick Start
+### 1️⃣ Pré-requisitos
 
-### 1. Pré-requisitos
-
-- **Node.js** versão 20 ou superior
+- **Node.js** 20 ou superior
   - [Baixar Node.js](https://nodejs.org/)
 
-### 2. Instalação
+### 2️⃣ Instalação
 
 ```bash
-# Clonar o repositório
+# Clonar repositório
 git clone https://github.com/rianne575/obrasegura-api.git
 cd obrasegura-api
 
@@ -35,52 +33,51 @@ cd obrasegura-api
 npm install
 ```
 
-### 3. Configurar Variáveis de Ambiente
+### 3️⃣ Configurar Variáveis de Ambiente
 
 ```bash
 # Copiar arquivo de exemplo
 cp .env.example .env
 
-# Editar .env e adicionar sua chave da OpenAI
+# Editar com sua chave da OpenAI
+# Linux/Mac:
 nano .env
+# Windows:
+notpad .env
 ```
 
-Adicione ao arquivo `.env`:
-
-```
-PORT=8080
+Adicione sua chave da OpenAI:
+```env
 OPENAI_API_KEY=sk-your-actual-key-here
-OPENAI_MODEL=gpt-4o
-OPENAI_VISION_MODEL=gpt-4o
-CORS_ORIGIN=*
 ```
 
-### 4. Obter Chave da OpenAI
+### 4️⃣ Obter Chave da OpenAI
 
-1. Acesse [platform.openai.com](https://platform.openai.com)
-2. Faça login ou crie uma conta
-3. Vá para [API Keys](https://platform.openai.com/api-keys)
-4. Clique em "Create new secret key"
-5. Copie a chave e adicione ao arquivo `.env`
+1. Acesse [https://platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+2. Faça login (ou crie uma conta)
+3. Clique em "Create new secret key"
+4. Copie a chave
+5. Adicione ao arquivo `.env`
 
-### 5. Executar a API
+### 5️⃣ Executar a API
 
-**Modo de desenvolvimento (com hot-reload):**
+**Modo desenvolvimento (com auto-reload):**
 ```bash
 npm run dev
 ```
 
-**Modo de produção:**
+**Modo produção:**
 ```bash
 npm start
 ```
 
-A API estará disponível em `http://localhost:8080`
+A API estará disponível em: **http://localhost:8080**
 
-### 6. Testar a API
+## ✅ Testar a API
+
+### Health Check
 
 ```bash
-# Verificar saúde da API
 curl http://localhost:8080/health
 ```
 
@@ -93,140 +90,149 @@ Resposta esperada:
 }
 ```
 
-## 📚 Endpoints Principais
-
-### Health Check
-
-```http
-GET /health
-```
-
-### Autenticação
-
-```http
-POST /auth/login
-POST /auth/register
-POST /auth/forgot-password
-GET /users/me
-```
-
 ### Chat com IA
 
-```http
-POST /ai/chat
-```
-
-**Body:**
-```json
-{
-  "message": "Quais são os principais riscos em uma obra?"
-}
-```
-
-**Resposta:**
-```json
-{
-  "reply": "Os principais riscos em uma obra incluem..."
-}
+```bash
+curl -X POST http://localhost:8080/ai/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Quais são os principais riscos em uma obra de construção?"}'
 ```
 
 ### Análise de Imagem
 
-```http
-POST /ai/analyze-image
+```bash
+curl -X POST http://localhost:8080/ai/analyze-image \
+  -F "image=@/caminho/para/foto.jpg"
 ```
 
-**Tipo:** `multipart/form-data`
+### Listar Ocorrências
 
-**Campo:** `image` (arquivo JPG, PNG ou WEBP)
-
-**Resposta:**
-```json
-{
-  "tipo": "Trabalho em altura",
-  "descricao": "Foi identificada uma situação de trabalho em altura sem proteção coletiva visível.",
-  "gravidade": "critica",
-  "local": "Área da obra",
-  "recomendacao": "Interromper a atividade e providenciar proteção contra quedas adequada."
-}
+```bash
+curl http://localhost:8080/occurrences
 ```
+
+### Criar Ocorrência
+
+```bash
+curl -X POST http://localhost:8080/occurrences \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tipo": "Falta de EPI",
+    "descricao": "Trabalhador sem capacete",
+    "gravidade": "alta",
+    "local": "Setor A",
+    "recomendacao": "Fornecer EPI adequado imediatamente"
+  }'
+```
+
+## 📚 Endpoints Disponíveis
+
+### Health & Status
+- `GET /health` - Verificar saúde da API
+
+### Autenticação
+- `POST /auth/login` - Login
+- `POST /auth/register` - Registrar novo usuário
+- `POST /auth/forgot-password` - Recuperar senha
+- `GET /users/me` - Dados do usuário atual
+
+### Chat com IA
+- `POST /ai/chat` - Chat em tempo real com IA
+- `GET /ai/recommendations` - Recomendações de segurança
+
+### Análise de Imagens
+- `POST /ai/analyze-image` - Analisar imagem (multipart/form-data)
+- `POST /monitoring/analyze` - Análise com monitoramento
 
 ### Ocorrências
-
-```http
-GET /occurrences           # Listar todas
-POST /occurrences          # Criar nova
-PUT /occurrences/:id       # Atualizar
-DELETE /occurrences/:id    # Deletar
-```
+- `GET /occurrences` - Listar todas
+- `POST /occurrences` - Criar nova
+- `PUT /occurrences/:id` - Atualizar
+- `DELETE /occurrences/:id` - Deletar
 
 ### Alertas
+- `GET /alerts` - Listar alertas (gravidade alta/crítica)
+- `PUT /alerts/:id/resolve` - Marcar como resolvido
 
-```http
-GET /alerts                    # Listar alertas de alta/crítica
-PUT /alerts/:id/resolve        # Marcar como resolvido
-```
-
-### Dashboard
-
-```http
-GET /dashboard
-```
-
-**Resposta:**
-```json
-{
-  "totalOccurrences": 10,
-  "openOccurrences": 4,
-  "criticalOccurrences": 2,
-  "resolvedOccurrences": 6,
-  "safetyScore": 82
-}
-```
-
-### Recomendações de IA
-
-```http
-GET /ai/recommendations
-```
+### Dashboard & Riscos
+- `GET /dashboard` - Métricas de segurança
+- `GET /risks` - Listar riscos abertos
+- `GET /risk-map` - Mapa de riscos por localização
 
 ### Relatórios
-
-```http
-GET /reports               # Listar
-POST /reports              # Criar novo
-```
+- `GET /reports` - Listar relatórios
+- `POST /reports` - Criar novo relatório
 
 ## 🔐 Segurança
 
-### Implementações de Segurança
-
 ✅ **CORS** - Controle de origem cruzada  
-✅ **Rate Limiting** - 100 requisições por 15 minutos por IP  
-✅ **Validação de arquivos** - Apenas JPG, PNG, WEBP  
-✅ **Limite de tamanho** - Máximo 10 MB por imagem  
-✅ **Tratamento de erros** - Sem exposição de secrets  
-✅ **Variáveis de ambiente** - Chaves nunca no código  
+✅ **Rate Limiting** - 100 requisições/15 minutos por IP  
+✅ **Validação** - Todos os campos validados  
+✅ **Sanitização** - Remoção de dados sensíveis  
+✅ **Multer** - Validação rigorosa de uploads  
+✅ **Ambiente** - Chaves nunca no código  
+✅ **Erros** - Sem exposição de secrets  
 
-### 🚫 O que NÃO fazer
+## 🌐 Publicar no Render
 
-```javascript
-// ❌ ERRADO - Nunca coloque a chave assim
-const apiKey = "sk-1234567890abcdef";
+### Passo 1: Preparar repositório
 
-// ✅ CORRETO - Use variáveis de ambiente
-const apiKey = process.env.OPENAI_API_KEY;
+```bash
+# Verificar que .env não está no git
+git status | grep .env
+
+# Confirmar que .env.example existe
+ls -la .env.example
+
+# Fazer commit
+git add .
+git commit -m "ObraSegura API - Backend pronto para Render"
+git push
 ```
 
-## 📱 Conexão com Flutter
+### Passo 2: Criar Serviço no Render
 
-No seu aplicativo Flutter, configure a URL base:
+1. Acesse [https://render.com](https://render.com)
+2. Clique em **New +** → **Web Service**
+3. Conecte seu repositório GitHub (rianne575/obrasegura-api)
+4. Configure:
+   - **Name:** `obrasegura-api`
+   - **Runtime:** Node
+   - **Build Command:** `npm install`
+   - **Start Command:** `npm start`
+   - **Instance Type:** Free
+
+### Passo 3: Adicionar Variáveis de Ambiente
+
+Na seção **Environment Variables** do Render, adicione:
+
+| Chave | Valor | Exemplo |
+|-------|-------|----------|
+| `OPENAI_API_KEY` | Sua chave OpenAI | `sk-...` |
+| `OPENAI_MODEL` | gpt-4o | - |
+| `OPENAI_VISION_MODEL` | gpt-4o | - |
+| `CORS_ORIGIN` | `*` ou URL do Flutter | - |
+| `NODE_ENV` | production | - |
+
+### Passo 4: Deploy
+
+1. Clique em **Create Web Service**
+2. Aguarde a construção (2-3 minutos)
+3. Teste em: `https://seu-servico.onrender.com/health`
+
+## 📱 Conectar Flutter à API
+
+No seu app Flutter, configure a URL base:
 
 ```dart
 class ApiService {
-  static const String baseUrl = 'https://seu-servico.onrender.com';
+  // Desenvolvimento
+  static const String baseUrl = 'http://localhost:8080';
   
-  Future<void> chatWithAI(String message) async {
+  // Produção (Render)
+  // static const String baseUrl = 'https://seu-servico.onrender.com';
+  
+  static Future<Map<String, dynamic>> chatWithAI(String message) async {
     final response = await http.post(
       Uri.parse('$baseUrl/ai/chat'),
       headers: {'Content-Type': 'application/json'},
@@ -234,125 +240,76 @@ class ApiService {
     );
     
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      print(data['reply']);
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Erro ao chamar API');
+    }
+  }
+  
+  static Future<Map<String, dynamic>> analyzeImage(File imageFile) async {
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/ai/analyze-image'),
+    );
+    
+    request.files.add(await http.MultipartFile.fromPath('image', imageFile.path));
+    final response = await request.send();
+    
+    if (response.statusCode == 200) {
+      return jsonDecode(await response.stream.bytesToString());
+    } else {
+      throw Exception('Erro ao analisar imagem');
     }
   }
 }
 ```
 
-## 🌐 Publicar no Render
-
-### Passo 1: Preparar o Repositório
-
-```bash
-# Certifique-se de que .env NÃO está no Git
-# Confirme que .env.example está presente
-git add .
-git commit -m "Prepare for Render deployment"
-git push
-```
-
-### Passo 2: Criar Serviço no Render
-
-1. Acesse [render.com](https://render.com)
-2. Clique em "New +" → "Web Service"
-3. Conecte seu repositório GitHub
-4. Configure:
-   - **Name:** `obrasegura-api`
-   - **Runtime:** Node
-   - **Build Command:** `npm install`
-   - **Start Command:** `npm start`
-   - **Plan:** Free (ou pago conforme necessário)
-
-### Passo 3: Adicionar Variáveis de Ambiente
-
-No painel do Render:
-
-1. Vá para "Environment"
-2. Adicione as variáveis:
-
-| Variável | Valor | Exemplo |
-|----------|-------|---------|
-| `OPENAI_API_KEY` | Sua chave da OpenAI | `sk-...` |
-| `OPENAI_MODEL` | Modelo de texto | `gpt-4o` |
-| `OPENAI_VISION_MODEL` | Modelo de visão | `gpt-4o` |
-| `CORS_ORIGIN` | URL da sua aplicação | `*` ou `https://seu-app.com` |
-
-### Passo 4: Deploy
-
-1. Clique em "Deploy"
-2. Aguarde a conclusão (2-3 minutos)
-3. Teste em `https://seu-servico.onrender.com/health`
-
-## 📊 Estrutura do Projeto
+## 📖 Estrutura do Projeto
 
 ```
 obrasegura-api/
-├── server.mjs              # Servidor principal
-├── package.json            # Dependências
-├── render.yaml             # Configuração de deploy
-├── .env.example            # Exemplo de variáveis
-├── .gitignore              # Arquivos ignorados
-├── data.json               # Banco de dados local
-└── README.md               # Este arquivo
+├── package.json           # Dependências
+├── server.mjs             # Servidor principal
+├── render.yaml            # Configuração Render
+├── .env.example           # Exemplo de variáveis
+├── .gitignore             # Arquivos ignorados
+├── data.json              # Banco de dados local
+└── README.md              # Este arquivo
 ```
 
 ## 🛠️ Dependências
 
-| Pacote | Versão | Propósito |
-|--------|--------|----------|
-| `express` | ^4.18.2 | Framework web |
-| `cors` | ^2.8.5 | Controle CORS |
-| `dotenv` | ^16.3.1 | Variáveis de ambiente |
-| `multer` | ^1.4.5 | Upload de arquivos |
-| `express-rate-limit` | ^7.1.5 | Rate limiting |
-| `openai` | ^4.52.0 | SDK da OpenAI |
-
-## 📝 Exemplos de Uso
-
-### Exemplo 1: Chat com IA
-
-```bash
-curl -X POST http://localhost:8080/ai/chat \
-  -H "Content-Type: application/json" \
-  -d '{"message":"Quais são os riscos de queda em altura?"}'
-```
-
-### Exemplo 2: Criar Ocorrência
-
-```bash
-curl -X POST http://localhost:8080/occurrences \
-  -H "Content-Type: application/json" \
-  -d '{
-    "tipo":"Falta de EPI",
-    "descricao":"Trabalhador sem capacete",
-    "gravidade":"alta",
-    "local":"Setor A",
-    "recomendacao":"Fornecer EPI adequado"
-  }'
-```
-
-### Exemplo 3: Analisar Imagem
-
-```bash
-curl -X POST http://localhost:8080/ai/analyze-image \
-  -F "image=@/caminho/para/imagem.jpg"
-```
+| Pacote | Versão | Função |
+|--------|--------|--------|
+| express | ^4.18.2 | Framework web |
+| cors | ^2.8.5 | CORS middleware |
+| dotenv | ^16.3.1 | Variáveis de ambiente |
+| multer | ^1.4.5 | Upload de arquivos |
+| express-rate-limit | ^7.1.5 | Rate limiting |
+| openai | ^4.52.0 | SDK OpenAI oficial |
 
 ## 🐛 Troubleshooting
 
-### Erro: "OPENAI_API_KEY não está configurada"
-
-**Solução:**
-1. Copie `.env.example` para `.env`
-2. Adicione sua chave da OpenAI
-3. Reinicie a aplicação
-
-### Erro: "Cannot find module 'express'"
+### Erro: "OPENAI_API_KEY não configurada"
 
 **Solução:**
 ```bash
+# Copiar arquivo de exemplo
+cp .env.example .env
+
+# Adicionar sua chave
+nano .env
+
+# Reiniciar servidor
+npm run dev
+```
+
+### Erro: "Cannot find module"
+
+**Solução:**
+```bash
+# Limpar e reinstalar
+rm -rf node_modules package-lock.json
 npm install
 ```
 
@@ -363,49 +320,35 @@ npm install
 # Usar outra porta
 PORT=3000 npm start
 
-# Ou matar processo na porta
-# macOS/Linux
+# Ou matar processo na porta (Linux/Mac)
 lsof -i :8080 | grep LISTEN | awk '{print $2}' | xargs kill -9
-
-# Windows
-netstat -ano | findstr :8080
-taskkill /PID <PID> /F
 ```
 
-## 📖 Documentação Adicional
+### Erro 502 ao chamar IA
 
-- [OpenAI API Docs](https://platform.openai.com/docs/api-reference)
-- [Express.js Guide](https://expressjs.com/)
-- [Render Deployment](https://render.com/docs)
-- [Multer Documentation](https://github.com/expressjs/multer)
+**Verificar:**
+- OPENAI_API_KEY está configurada?
+- Créditos da OpenAI disponíveis?
+- Internet funcionando?
 
-## 🤝 Contribuindo
+## 📞 Suporte
 
-Contribuições são bem-vindas! Por favor:
-
-1. Faça fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
+- GitHub Issues: [https://github.com/rianne575/obrasegura-api/issues](https://github.com/rianne575/obrasegura-api/issues)
+- OpenAI Docs: [https://platform.openai.com/docs](https://platform.openai.com/docs)
+- Express Docs: [https://expressjs.com](https://expressjs.com)
+- Render Docs: [https://render.com/docs](https://render.com/docs)
 
 ## 📄 Licença
 
-Este projeto é licenciado sob a Licença MIT - veja o arquivo LICENSE para detalhes.
+MIT License - Veja LICENSE para detalhes
 
 ## 👤 Autor
 
 **rianne575**
-
 - GitHub: [@rianne575](https://github.com/rianne575)
-
-## ⭐ Suporte
-
-Se este projeto foi útil, considere deixar uma estrela! ⭐
-
-Para problemas, abra uma issue no GitHub.
 
 ---
 
-**ObraSegura - Segurança Inteligente em Obras** 🏗️🔒
+**ObraSegura - Segurança Inteligente em Obras** 🏗️🔒  
+Feito com ❤️ para construção segura
 ````

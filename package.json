@@ -1,7 +1,7 @@
 {
   "name": "obrasegura-api",
   "version": "1.0.0",
-  "description": "Backend API real e funcional para o aplicativo Flutter ObraSegura",
+  "description": "Backend API real e funcional para o aplicativo Flutter ObraSegura - Segurança Inteligente em Obras",
   "type": "module",
   "main": "server.mjs",
   "scripts": {
@@ -25,7 +25,9 @@
     "safety",
     "construction",
     "flutter",
-    "openai"
+    "openai",
+    "segurança",
+    "obra"
   ],
   "author": "rianne575",
   "license": "MIT"
